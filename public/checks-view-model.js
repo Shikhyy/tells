@@ -12,7 +12,7 @@ export const CHECK_STATUS = {
   na: { symbol: "–", label: "Not available" }
 };
 
-const CHECKS = [
+export const CHECKS = [
   {
     name: "Request profile",
     group: "fingerprint",

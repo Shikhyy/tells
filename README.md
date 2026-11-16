@@ -36,6 +36,8 @@ curl https://tells.blowhorn.ai/api/check
 
 Check rows and `server.cloudflareBotManagement` have JSON Schemas (draft 2020-12) in `schemas/`; unit tests validate the real output against them.
 
+The open check catalog is [`schemas/check-catalog.json`](schemas/check-catalog.json) (schema [`schemas/check-catalog.schema.json`](schemas/check-catalog.schema.json)). `catalog_version` is **1.0.0**. It lists every check row and every scored reason that already ships, including not-available rows and the 0-point `fingerprint_randomized` reason. The [/checks/changelog/](https://tells.blowhorn.ai/checks/changelog/) page records that version. The catalog is not a field on `/api/report`.
+
 API routes are rate limited at the Worker edge by route and client IP (30 calls a minute by default).
 
 ## Privacy
