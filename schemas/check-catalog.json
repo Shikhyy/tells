@@ -1,0 +1,989 @@
+{
+  "catalog_version": "1.0.0",
+  "checks": [
+    {
+      "id": "request-profile",
+      "name": "Request profile",
+      "group": "fingerprint",
+      "since": "v0.2.0",
+      "reads": [
+        "The User-Agent and the full header set of the request that fetched the page",
+        "Client hints (platform, mobile flag, high-entropy values) as sent on the wire",
+        "The browser's own navigator values, collected in the page, for the comparison",
+        "The browser's timezone, set against the timezone of the IP address"
+      ],
+      "rules": {
+        "pass": "Request and browser describe the same browser on the same platform.",
+        "warn": "The story mostly agrees but a detail is off: language, platform or mobile hints that do not match the browser, or a browser timezone that differs from the IP's timezone.",
+        "fail": "No User-Agent at all, an automation or HTTP-library User-Agent, or a request User-Agent that differs from the one the browser reports about itself.",
+        "na": "The server readings did not arrive, so there was nothing to compare."
+      },
+      "reasons": [
+        {
+          "id": "server_missing_ua",
+          "points": 25,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "missing_user_agent",
+          "points": 25,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "automation_user_agent",
+          "points": 25,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "library_user_agent",
+          "points": 12,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "missing_accept",
+          "points": 12,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "missing_accept_language",
+          "points": 12,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "missing_client_hints",
+          "points": 5,
+          "severity": "low",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "body_without_content_type",
+          "points": 5,
+          "severity": "low",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "request_client_ua_mismatch",
+          "points": 22,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "accept_language_mismatch",
+          "points": 12,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "client_hint_platform_mismatch",
+          "points": 14,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "client_hint_mobile_mismatch",
+          "points": 12,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "client_hint_high_entropy_mismatch",
+          "points": 14,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "ua_data_high_entropy_mismatch",
+          "points": 14,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "ua_platform_mismatch",
+          "points": 18,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "timezone_mismatch",
+          "points": 14,
+          "severity": "medium",
+          "since": "v0.2.0"
+        }
+      ],
+      "slug": "request-profile",
+      "page": "/checks/request-profile/"
+    },
+    {
+      "id": "proxy-indicators",
+      "name": "Proxy indicators",
+      "group": "fingerprint",
+      "since": "v0.2.0",
+      "reads": [
+        "Forwarding headers on the request (for example X-Forwarded-For style headers), separated from Cloudflare's own"
+      ],
+      "rules": {
+        "pass": "Only Cloudflare's normal forwarding headers, or none at all.",
+        "warn": "Extra forwarding headers are present. That is the finding; this check never fails a run on its own.",
+        "fail": null,
+        "na": null
+      },
+      "reasons": [
+        {
+          "id": "proxy_headers",
+          "points": 20,
+          "severity": "medium",
+          "since": "v0.2.0"
+        }
+      ],
+      "slug": "proxy-indicators",
+      "page": "/checks/proxy-indicators/"
+    },
+    {
+      "id": "datacenter-pattern",
+      "name": "Datacenter pattern",
+      "group": "fingerprint",
+      "since": "v0.2.0",
+      "reads": [
+        "The ASN organization name Cloudflare reports for the connecting IP",
+        "A name-pattern heuristic over that organization name"
+      ],
+      "rules": {
+        "pass": "The owner reads as a consumer or business ISP.",
+        "warn": "The network owner's name resembles a hosting or datacenter provider.",
+        "fail": null,
+        "na": "No network owner was reported for this connection."
+      },
+      "reasons": [
+        {
+          "id": "datacenter_asn_heuristic",
+          "points": 15,
+          "severity": "medium",
+          "since": "v0.2.0"
+        }
+      ],
+      "slug": "datacenter-pattern",
+      "page": "/checks/datacenter-pattern/"
+    },
+    {
+      "id": "vpn-proxy-tor",
+      "name": "VPN / proxy / Tor intelligence",
+      "group": "fingerprint",
+      "since": "v0.2.0",
+      "reads": [
+        "The provider's flags for the connecting IP: VPN, proxy, Tor, datacenter, crawler, abuser",
+        "The provider's fraud score, when present"
+      ],
+      "rules": {
+        "pass": "No flags raised.",
+        "warn": "The address is hosting space or carries an abuse flag: suspicious company, not proof.",
+        "fail": "The address is flagged as Tor, a proxy, a VPN or crawler traffic, or carries a high fraud score. These are the heaviest network penalties in the verdict.",
+        "na": "The lookup was off or failed for this run."
+      },
+      "reasons": [
+        {
+          "id": "ip_vpn",
+          "points": 30,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "ip_proxy",
+          "points": 35,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "ip_tor",
+          "points": 45,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "ip_datacenter",
+          "points": 18,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "ip_crawler",
+          "points": 35,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "ip_abuser",
+          "points": 15,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "ipqs_high_fraud_score",
+          "points": 20,
+          "severity": "high",
+          "since": "v0.2.0"
+        }
+      ],
+      "slug": "vpn-proxy-tor",
+      "page": "/checks/vpn-proxy-tor/"
+    },
+    {
+      "id": "managed-bot-score",
+      "name": "Managed bot score",
+      "group": "automation",
+      "since": "v0.2.0",
+      "reads": [
+        "The managed bot score Cloudflare assigned to the request",
+        "Whether Cloudflare identifies the request as a verified bot (a known, declared crawler)"
+      ],
+      "rules": {
+        "pass": "A score of 50 or better.",
+        "warn": "A score from 30 to 49: the borderline band.",
+        "fail": "A score under 30, or the request is identified as verified bot traffic.",
+        "na": "Cloudflare Bot Management is not active on this site, so there is no real score to show. The row says so rather than guessing."
+      },
+      "reasons": [
+        {
+          "id": "managed_bot_score_low",
+          "points": 30,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "managed_bot_score_borderline",
+          "points": 12,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "cloudflare_verified_bot",
+          "points": 35,
+          "severity": "high",
+          "since": "v0.2.0"
+        }
+      ],
+      "slug": "managed-bot-score",
+      "page": "/checks/managed-bot-score/"
+    },
+    {
+      "id": "tls-fingerprint",
+      "name": "TLS fingerprint",
+      "group": "fingerprint",
+      "since": "v0.2.0",
+      "reads": [
+        "The TLS version of the connection",
+        "The JA4 (or JA3) fingerprint Cloudflare computed for it, when the plan exposes it"
+      ],
+      "rules": {
+        "pass": "Tells displays the fingerprint but does not score it: on its own it identifies a class of software, not a culprit.",
+        "warn": null,
+        "fail": null,
+        "na": "Cloudflare did not return a JA4 or JA3 fingerprint for this request, so the row says so rather than guessing."
+      },
+      "reasons": [],
+      "slug": "tls-fingerprint",
+      "page": "/checks/tls-fingerprint/"
+    },
+    {
+      "id": "browser-data",
+      "name": "Browser data",
+      "group": "automation",
+      "since": "v0.2.0",
+      "reads": [
+        "navigator.webdriver, the single most direct automation flag a browser exposes",
+        "The client User-Agent for headless markers",
+        "The plugin list and its internal structure (empty or inconsistent lists are characteristic of headless and patched browsers)",
+        "Whether navigator property getters are still the browser's native code",
+        "Screen and viewport geometry, touch support against the claimed device class, notification permission state"
+      ],
+      "rules": {
+        "pass": "The self-description is ordinary and internally consistent.",
+        "warn": "Zero plugins in a Chromium browser, plugin entries that contradict each other, a getter that is not native code, impossible screen geometry, a mobile claim with no touch surface, or a notification permission state real browsers do not produce.",
+        "fail": "navigator.webdriver is true, or the client User-Agent carries a headless marker.",
+        "na": "Browser data was not collected in this run."
+      },
+      "reasons": [
+        {
+          "id": "navigator_webdriver",
+          "points": 40,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "client_headless_user_agent",
+          "points": 40,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "empty_plugins_chromium",
+          "points": 10,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "plugin_reference_mismatch",
+          "points": 10,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "plugin_item_overflow",
+          "points": 5,
+          "severity": "low",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "prototype_getter_not_native",
+          "points": 15,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "screen_viewport_impossible",
+          "points": 12,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "mobile_touch_mismatch",
+          "points": 12,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "notification_permission_default_state",
+          "points": 8,
+          "severity": "low",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "notification_permission_contradiction",
+          "points": 12,
+          "severity": "medium",
+          "since": "v0.2.0"
+        }
+      ],
+      "slug": "browser-data",
+      "page": "/checks/browser-data/"
+    },
+    {
+      "id": "browser-fingerprint",
+      "name": "Browser fingerprint",
+      "group": "fingerprint",
+      "since": "v0.2.0",
+      "reads": [
+        "A canvas rendering and its hash",
+        "WebGL support, parameters and the unmasked GPU renderer string",
+        "The detectable font list and its size"
+      ],
+      "rules": {
+        "pass": "Both probes rendered and hashed normally.",
+        "warn": "WebGL is unavailable, or the canvas probe failed or was blocked. Real browsers almost always can do both; missing graphics is a property of stripped-down or synthetic environments.",
+        "fail": null,
+        "na": "Fingerprint readings were not collected in this run."
+      },
+      "reasons": [
+        {
+          "id": "webgl_missing",
+          "points": 10,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "canvas_error",
+          "points": 8,
+          "severity": "low",
+          "since": "v0.2.0"
+        }
+      ],
+      "slug": "browser-fingerprint",
+      "page": "/checks/browser-fingerprint/"
+    },
+    {
+      "id": "fingerprint-protection",
+      "name": "Fingerprint protection",
+      "group": "fingerprint",
+      "since": "master",
+      "note": "Added on master by the fingerprint-protection work (#44, #46). No release version is assigned to that work.",
+      "reads": [
+        "Canvas: a small solid-colour square, read three times in the page, once in an iframe and once in a Web Worker. An unprotected browser returns exactly the colour that was drawn.",
+        "WebGL: the graphics vendor, renderer and limits, read the same way.",
+        "Audio: a short rendered sound, three times in the page and once in an iframe, plus a constant signal that should come back unchanged.",
+        "Fonts and voices: the installed fonts and speech voices, three times in the page and once in an iframe. A worker cannot read these.",
+        "Only counts and yes or no answers leave the page, never the values that were read."
+      ],
+      "rules": {
+        "pass": "Every surface read steadily, or some were randomized or blocked. Randomized and blocked surfaces are named in the result but cost nothing, because privacy browsers and anti-detection browsers both randomize.",
+        "warn": "A surface reads one value in the page and another in a worker or iframe. That is what changing only the visible page looks like. A real browser does not disagree with itself.",
+        "fail": null,
+        "na": "Fingerprint protection was not measured."
+      },
+      "reasons": [
+        {
+          "id": "fingerprint_context_inconsistent",
+          "points": 15,
+          "severity": "medium",
+          "since": "master"
+        },
+        {
+          "id": "fingerprint_randomized",
+          "points": 0,
+          "severity": "low",
+          "since": "master",
+          "affects_row": false,
+          "note": "Scored at 0 points and severity low. It does not change the check row. Privacy browsers randomize too."
+        }
+      ],
+      "slug": "fingerprint-protection",
+      "page": "/checks/fingerprint-protection/"
+    },
+    {
+      "id": "fingerprint-surfaces",
+      "name": "Fingerprint surfaces",
+      "group": "fingerprint",
+      "since": "v0.2.0",
+      "reads": [
+        "Extension probes against a set of known extensions",
+        "Speech synthesis voices",
+        "Media and DRM capability, sensor availability, document policy, DevTools state"
+      ],
+      "rules": {
+        "pass": "The surfaces are reported, not scored on their own. Their weight is in combination: each is a small fact, and together they single out one browser in a crowd.",
+        "warn": null,
+        "fail": null,
+        "na": "The surface readings did not arrive."
+      },
+      "reasons": [],
+      "slug": "fingerprint-surfaces",
+      "page": "/checks/fingerprint-surfaces/"
+    },
+    {
+      "id": "performance-memory",
+      "name": "Performance memory pings",
+      "group": "fingerprint",
+      "since": "v0.2.0",
+      "reads": [
+        "performance.memory samples (used, total, limit) taken alongside the latency pings"
+      ],
+      "rules": {
+        "pass": "Every sample is physically plausible.",
+        "warn": "At least one sample contains impossible heap values.",
+        "fail": null,
+        "na": "This browser does not expose performance.memory. Only Chromium browsers do, so Firefox and Safari always read Not available here. That is normal."
+      },
+      "reasons": [
+        {
+          "id": "performance_memory_anomaly",
+          "points": 12,
+          "severity": "medium",
+          "since": "v0.2.0"
+        }
+      ],
+      "slug": "performance-memory",
+      "page": "/checks/performance-memory/"
+    },
+    {
+      "id": "worker-consistency",
+      "name": "Worker consistency",
+      "group": "fingerprint",
+      "since": "v0.2.0",
+      "reads": [
+        "navigator.platform and user agent data in the window, a Web Worker, an iframe and a service worker"
+      ],
+      "rules": {
+        "pass": "Every context that answered agrees.",
+        "warn": "Any context disagrees with the window about platform or user agent data. One disagreement is enough; real browsers cannot disagree with themselves.",
+        "fail": null,
+        "na": "Worker readings were not collected in this run."
+      },
+      "reasons": [
+        {
+          "id": "worker_platform_mismatch",
+          "points": 18,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "iframe_platform_mismatch",
+          "points": 12,
+          "severity": "medium",
+          "since": "v0.2.0"
+        }
+      ],
+      "slug": "worker-consistency",
+      "page": "/checks/worker-consistency/"
+    },
+    {
+      "id": "webrtc-clues",
+      "name": "WebRTC network clues",
+      "group": "fingerprint",
+      "since": "v0.2.0",
+      "reads": [
+        "WebRTC ICE candidates gathered in the page (via a public STUN server)",
+        "The request's public IP, for the comparison"
+      ],
+      "rules": {
+        "pass": "WebRTC's public addresses agree with the request, or it exposed only local addresses.",
+        "warn": null,
+        "fail": "WebRTC exposed a public IP that differs from the request IP: the connection claims one address while the browser volunteers another.",
+        "na": "WebRTC is unsupported, blocked, or produced no candidates. Privacy tools often disable it; that reads as Not available, not as a failure."
+      },
+      "reasons": [
+        {
+          "id": "webrtc_public_ip_mismatch",
+          "points": 25,
+          "severity": "high",
+          "since": "v0.2.0"
+        }
+      ],
+      "slug": "webrtc-clues",
+      "page": "/checks/webrtc-clues/"
+    },
+    {
+      "id": "latency",
+      "name": "Latency",
+      "group": "fingerprint",
+      "since": "v0.2.0",
+      "reads": [
+        "The median browser-to-edge fetch time measured in the page",
+        "Cloudflare's TCP (and QUIC, when present) round-trip times for the connection"
+      ],
+      "rules": {
+        "pass": "The two clocks roughly agree.",
+        "warn": "The browser's measured latency is far higher than the handshake's: something (a remote browser, a relay, an extra hop) is between the page and the connection it arrived on.",
+        "fail": null,
+        "na": "No browser or TCP round-trip time was returned."
+      },
+      "reasons": [
+        {
+          "id": "browser_edge_latency_gap",
+          "points": 8,
+          "severity": "low",
+          "since": "v0.2.0"
+        }
+      ],
+      "slug": "latency",
+      "page": "/checks/latency/"
+    },
+    {
+      "id": "remote-control-tells",
+      "name": "Remote-control tells",
+      "group": "automation",
+      "since": "v0.2.0",
+      "reads": [
+        "Known automation globals on window and driver keys on document",
+        "A CDP serialization probe (a known side channel of the DevTools protocol)",
+        "Whether the webdriver getter is native, and whether the property was redefined to hide",
+        "Whether everyday native functions (Function.prototype.toString, permissions.query) have been replaced by script",
+        "Input event trust: scripted events anywhere on the page, the interaction test's typing and clicks included, and events while the document is hidden or unfocused",
+        "Impossible window geometry (a zero outer size)"
+      ],
+      "rules": {
+        "pass": "No machinery found and no patch seams showing.",
+        "warn": "The CDP probe tripped, everyday functions were replaced by script, or trusted input arrived while the page lacked focus.",
+        "fail": "Driver globals or document keys found, scripted input, input into a hidden page, a zero-size window, or evidence the webdriver flag was hidden by patching. These are the most specific findings in the whole report.",
+        "na": "Remote-control readings were not collected in this run."
+      },
+      "reasons": [
+        {
+          "id": "automation_globals",
+          "points": 30,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "document_automation_keys",
+          "points": 30,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "cdp_serialization_signal",
+          "points": 20,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "webdriver_own_property",
+          "points": 25,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "webdriver_getter_patched",
+          "points": 25,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "native_function_patched",
+          "points": 15,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "synthetic_input",
+          "points": 30,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "input_while_hidden",
+          "points": 25,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "input_without_focus",
+          "points": 12,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "zero_size_window",
+          "points": 25,
+          "severity": "high",
+          "since": "v0.2.0"
+        }
+      ],
+      "slug": "remote-control-tells",
+      "page": "/checks/remote-control-tells/"
+    },
+    {
+      "id": "behavioural-classification",
+      "name": "Behavioural classification",
+      "group": "behavior",
+      "since": "master",
+      "note": "The row shipped in v0.2.0. behavior_evidence_invalid was added on master when the Worker started deriving the behaviour score (#35, #38).",
+      "reads": [
+        "Pointer, keyboard, scroll, focus and visibility events and their timing during the visit",
+        "The activity from the interaction test, when taken"
+      ],
+      "rules": {
+        "pass": "A score of 0.5 or better. A short, still visit scores lower than an active one; that is the measure working, not an accusation.",
+        "warn": "A score from 0.25 to 0.5: borderline texture.",
+        "fail": "A behaviour score under 0.25, or evidence that is missing or does not hold together.",
+        "na": "Behaviour evidence was not collected in this run."
+      },
+      "reasons": [
+        {
+          "id": "behavior_score_low",
+          "points": 25,
+          "severity": "high",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "behavior_score_borderline",
+          "points": 12,
+          "severity": "medium",
+          "since": "v0.2.0"
+        },
+        {
+          "id": "behavior_evidence_invalid",
+          "points": 25,
+          "severity": "high",
+          "since": "master"
+        }
+      ],
+      "slug": "behavioural-classification",
+      "page": "/checks/behavioural-classification/"
+    },
+    {
+      "id": "interaction",
+      "name": "Interaction",
+      "group": "behavior",
+      "since": "master",
+      "note": "The interaction row shipped in v0.3.0 with 13 checks. int_focus and int_visibility were added on master (#19, #40). While the checks are uncalibrated, a raw fail scores medium at 3 points and a raw warn scores low at 1 point, so the row warns and does not fail.",
+      "reads": [
+        "The order of press and release events on the Start and Submit buttons",
+        "Whether each button was pressed with the pointer, or with Enter or Space from the keyboard. A keyboard press has no pointer position, so the pointer checks are not judged for it",
+        "Where on each button the pointer landed, and the offset between screen and window coordinates",
+        "How far the pointer travelled in the second before each press, counted in pixels, never as a path",
+        "How long each press and each key was held, and the gaps between keys",
+        "Whether the text arrived as typed keys, as pasted text, or as text with no key presses",
+        "Whether the phrase field was focused by the click or the key before typing, and whether blur and focus arrived in order around Start and Submit",
+        "Whether trusted input arrived while the tab was hidden or the page was unfocused",
+        "How long the task took from Start to Submit"
+      ],
+      "rules": {
+        "pass": "The task was completed and the evidence matched a person.",
+        "warn": "The task was completed and something was unusual, such as a paste, a missing key event, screen coordinates equal to window coordinates on every click, focus that did not come from the click or key, or input while the tab was hidden.",
+        "fail": null,
+        "na": "The task was not taken, or no check could be judged on it. That is a neutral result; the verdict is computed without it."
+      },
+      "reasons": [
+        {
+          "id": "int_trusted",
+          "since": "v0.3.0",
+          "provisional": true,
+          "outcomes": [
+            {
+              "status": "fail",
+              "severity": "medium",
+              "points": 3
+            },
+            {
+              "status": "warn",
+              "severity": "low",
+              "points": 1
+            }
+          ],
+          "note": "Adds no points when synthetic_input has already scored for the same script-made events. The status is still recorded."
+        },
+        {
+          "id": "int_click_chain",
+          "since": "v0.3.0",
+          "provisional": true,
+          "outcomes": [
+            {
+              "status": "fail",
+              "severity": "medium",
+              "points": 3
+            },
+            {
+              "status": "warn",
+              "severity": "low",
+              "points": 1
+            }
+          ]
+        },
+        {
+          "id": "int_click_detail",
+          "since": "v0.3.0",
+          "provisional": true,
+          "outcomes": [
+            {
+              "status": "fail",
+              "severity": "medium",
+              "points": 3
+            },
+            {
+              "status": "warn",
+              "severity": "low",
+              "points": 1
+            }
+          ]
+        },
+        {
+          "id": "int_screen_coords",
+          "since": "v0.3.0",
+          "provisional": true,
+          "outcomes": [
+            {
+              "status": "fail",
+              "severity": "medium",
+              "points": 3
+            },
+            {
+              "status": "warn",
+              "severity": "low",
+              "points": 1
+            }
+          ]
+        },
+        {
+          "id": "int_coalesced",
+          "since": "v0.3.0",
+          "provisional": true,
+          "outcomes": [
+            {
+              "status": "fail",
+              "severity": "medium",
+              "points": 3
+            },
+            {
+              "status": "warn",
+              "severity": "low",
+              "points": 1
+            }
+          ]
+        },
+        {
+          "id": "int_premove",
+          "since": "v0.3.0",
+          "provisional": true,
+          "outcomes": [
+            {
+              "status": "fail",
+              "severity": "medium",
+              "points": 3
+            },
+            {
+              "status": "warn",
+              "severity": "low",
+              "points": 1
+            }
+          ]
+        },
+        {
+          "id": "int_centre",
+          "since": "v0.3.0",
+          "provisional": true,
+          "outcomes": [
+            {
+              "status": "fail",
+              "severity": "medium",
+              "points": 3
+            },
+            {
+              "status": "warn",
+              "severity": "low",
+              "points": 1
+            }
+          ]
+        },
+        {
+          "id": "int_press",
+          "since": "v0.3.0",
+          "provisional": true,
+          "outcomes": [
+            {
+              "status": "fail",
+              "severity": "medium",
+              "points": 3
+            },
+            {
+              "status": "warn",
+              "severity": "low",
+              "points": 1
+            }
+          ]
+        },
+        {
+          "id": "int_key_chain",
+          "since": "v0.3.0",
+          "provisional": true,
+          "outcomes": [
+            {
+              "status": "fail",
+              "severity": "medium",
+              "points": 3
+            },
+            {
+              "status": "warn",
+              "severity": "low",
+              "points": 1
+            }
+          ]
+        },
+        {
+          "id": "int_value_source",
+          "since": "v0.3.0",
+          "provisional": true,
+          "outcomes": [
+            {
+              "status": "fail",
+              "severity": "medium",
+              "points": 3
+            },
+            {
+              "status": "warn",
+              "severity": "low",
+              "points": 1
+            }
+          ]
+        },
+        {
+          "id": "int_key_rhythm",
+          "since": "v0.3.0",
+          "provisional": true,
+          "outcomes": [
+            {
+              "status": "fail",
+              "severity": "medium",
+              "points": 3
+            },
+            {
+              "status": "warn",
+              "severity": "low",
+              "points": 1
+            }
+          ]
+        },
+        {
+          "id": "int_dwell",
+          "since": "v0.3.0",
+          "provisional": true,
+          "outcomes": [
+            {
+              "status": "fail",
+              "severity": "medium",
+              "points": 3
+            },
+            {
+              "status": "warn",
+              "severity": "low",
+              "points": 1
+            }
+          ]
+        },
+        {
+          "id": "int_task_speed",
+          "since": "v0.3.0",
+          "provisional": true,
+          "outcomes": [
+            {
+              "status": "fail",
+              "severity": "medium",
+              "points": 3
+            },
+            {
+              "status": "warn",
+              "severity": "low",
+              "points": 1
+            }
+          ]
+        },
+        {
+          "id": "int_focus",
+          "since": "master",
+          "provisional": true,
+          "outcomes": [
+            {
+              "status": "fail",
+              "severity": "medium",
+              "points": 3
+            },
+            {
+              "status": "warn",
+              "severity": "low",
+              "points": 1
+            }
+          ]
+        },
+        {
+          "id": "int_visibility",
+          "since": "master",
+          "provisional": true,
+          "outcomes": [
+            {
+              "status": "fail",
+              "severity": "medium",
+              "points": 3
+            },
+            {
+              "status": "warn",
+              "severity": "low",
+              "points": 1
+            }
+          ]
+        },
+        {
+          "id": "interaction_report_invalid",
+          "points": 5,
+          "severity": "low",
+          "since": "v0.3.0",
+          "note": "Scored when a posted interaction report does not match its schema. It is not one of the int_* checks."
+        }
+      ],
+      "slug": "interaction",
+      "page": "/checks/interaction/"
+    }
+  ]
+}
