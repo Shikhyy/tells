@@ -6,6 +6,7 @@ import { validateInteractionReport } from "../public/generated/validate-interact
 import { evaluateInteractionChecks, INTERACTION_CHECK_IDS } from "../public/interaction-checks.js";
 import { getSuspiciousProxyHeaders } from "./proxy-headers.js";
 import { HEADER_REASON_IDS } from "./server-signals.js";
+import { sameTimezone } from "./timezone.js";
 import {
   collectClientHintHighEntropyMismatches,
   collectUserAgentDataHighEntropyMismatches,
@@ -161,7 +162,7 @@ export function enrichClientConsistency(client, server) {
 
   const browserTimezone = client.browser?.timezone || null;
   const ipTimezone = server?.ipIntel?.normalized?.timezone || server?.cf?.timezone || null;
-  if (browserTimezone && ipTimezone && browserTimezone !== ipTimezone) {
+  if (browserTimezone && ipTimezone && !sameTimezone(browserTimezone, ipTimezone)) {
     consistency.timezoneMismatch = { browserTimezone, ipTimezone };
   }
 
