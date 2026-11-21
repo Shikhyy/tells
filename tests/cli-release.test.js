@@ -37,9 +37,10 @@ function withChange(change) {
   return copy;
 }
 
-// Node on PATH for the bin's `#!/usr/bin/env node`, and no npm_config_* leaking in from pnpm.
+// Node on PATH for the bin's `#!/usr/bin/env node`, no npm_config_* leaking in from pnpm,
+// and no CI OIDC credentials an npm child could exchange for a publish token.
 function childEnv(extraPath) {
-  const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^npm_/i.test(key)));
+  const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^(npm_|ACTIONS_ID_TOKEN_)/i.test(key)));
   env.PATH = [extraPath, dirname(process.execPath), process.env.PATH].filter(Boolean).join(delimiter);
   return env;
 }
@@ -94,7 +95,8 @@ describe("package.json", () => {
     expect(pkg.private).toBeUndefined();
     expect(pkg.name).toBe(manifest.package.name);
     expect(Object.keys(pkg.bin)).toEqual([manifest.package.bin]);
-    expect(pkg.bin[manifest.package.bin].replace(/^\.\//, "")).toBe(manifest.package.entry);
+    // npm rewrites "./bin/tells.js" to "bin/tells.js" and warns on publish, so require the normalized form.
+    expect(pkg.bin[manifest.package.bin]).toBe(manifest.package.entry);
     expect(pkg.license).toBe(manifest.package.license);
     expect(pkg.homepage).toBe(manifest.package.homepage);
     expect(pkg.description).toBe(manifest.package.description);
@@ -177,6 +179,22 @@ describe("packed package", () => {
     expect(result.stdout).toContain("Usage:");
     expect(result.stderr).toBe("");
   });
+
+  it.skipIf(process.platform === "win32")("prints the package version for tells --version", async () => {
+    const result = await runCommand(manifest.package.bin, ["--version"], { env: childEnv(join(prefix, "bin")) });
+    expect(result.code).toBe(0);
+    expect(result.stdout.trim()).toBe(pkg.version);
+    expect(result.stderr).toBe("");
+  });
+
+  it("packs and dry-run publishes without an invalid bin warning", async () => {
+    // The fixture server stands in for the registry, so the dry run never sees npm's published versions.
+    for (const args of [["pack", "--dry-run"], ["publish", "--dry-run", "--registry", serverUrl]]) {
+      const { stderr } = await run("npm", args, { cwd: root, env: childEnv(), encoding: "utf8" });
+      expect(stderr).not.toMatch(/was invalid and removed/);
+      expect(stderr).not.toMatch(/bin\[/);
+    }
+  }, 60_000);
 
   it.skipIf(process.platform === "win32")("runs --server-only with no Playwright installed", async () => {
     expect(existsSync(join(prefix, "lib/node_modules/playwright"))).toBe(false);
